@@ -1,0 +1,97 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: identity-config
+data:
+  NAMA_PRAKTIKAN: "Dhiya Ulhaq"
+  NIM_PRAKTIKAN: "2407716"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend-minecraft
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      containers:
+      - name: backend-api
+        image: dhiyauu/minecraft-backend:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 5000
+        env:
+        - name: NAMA_PRAKTIKAN
+          valueFrom:
+            configMapKeyRef:
+              name: identity-config
+              key: NAMA_PRAKTIKAN
+        - name: NIM_PRAKTIKAN
+          valueFrom:
+            configMapKeyRef:
+              name: identity-config
+              key: NIM_PRAKTIKAN
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-service
+spec:
+  selector:
+    app: backend
+  ports:
+    - protocol: TCP
+      port: 5000
+      targetPort: 5000
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend-minecraft
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      containers:
+      - name: frontend-ui
+        image: dhiyauu/minecraft-frontend:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 80
+        env:
+        - name: NAMA_PRAKTIKAN
+          valueFrom:
+            configMapKeyRef:
+              name: identity-config
+              key: NAMA_PRAKTIKAN
+        - name: NIM_PRAKTIKAN
+          valueFrom:
+            configMapKeyRef:
+              name: identity-config
+              key: NIM_PRAKTIKAN
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend-service
+spec:
+  selector:
+    app: frontend
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+  type: ClusterIP
